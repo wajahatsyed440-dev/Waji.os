@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html>
+<head>
+                <style></style>
+            </head>
+            <body class="">
+                <script>(function installLiveweaveConsoleBridge() {
+        if (window.__liveweaveConsoleBridge) return;
+        window.__liveweaveConsoleBridge = true;
+
+        function format(value) {
+            if (typeof value === 'string') return value;
+            if (typeof value === 'undefined') return 'undefined';
+            if (typeof value === 'function') return value.toString();
+            if (value instanceof Error) return value.name + ': ' + value.message;
+            if (value instanceof Element) return value.outerHTML;
+            try {
+                var seen = [];
+                return JSON.stringify(value, function(key, item) {
+                    if (typeof item === 'object' && item !== null) {
+                        if (seen.indexOf(item) !== -1) return '[Circular]';
+                        seen.push(item);
+                    }
+                    return item;
+                }, 2);
+            } catch (err) {
+                return String(value);
+            }
+        }
+
+        function send(type, values, id) {
+            parent.postMessage({
+                source: 'liveweave-preview-console',
+                type: type,
+                id: id || '',
+                values: (values || []).map(format)
+            }, '*');
+        }
+
+        ['log', 'info', 'warn', 'error', 'debug'].forEach(function(level) {
+            var original = console[level];
+            console[level] = function() {
+                var args = Array.prototype.slice.call(arguments);
+                send(level === 'log' || level === 'debug' ? 'log' : level, args);
+                if (original) original.apply(console, args);
+            };
+        });
+
+        window.addEventListener('error', function(event) {
+            send('error', [event.message + (event.lineno ? ' (line ' + event.lineno + ')' : '')]);
+        });
+        window.addEventListener('unhandledrejection', function(event) {
+            send('error', ['Unhandled promise rejection:', event.reason]);
+        });
+        window.addEventListener('message', function(event) {
+            var message = event.data || {};
+            if (event.source !== parent || message.source !== 'liveweave-parent-console' || message.type !== 'evaluate') return;
+            try {
+                var result = (0, eval)(message.code);
+                Promise.resolve(result).then(function(value) {
+                    send('result', [value], message.id);
+                }, function(error) {
+                    send('error', [error], message.id);
+                });
+            } catch (error) {
+                send('error', [error], message.id);
+            }
+        });
+        send('ready', []);
+    })();</script>
+                <script>(function installPreviewLinkGuard() {
+        var noticeTimer;
+
+        function showNotice(message) {
+            var notice = document.getElementById('lw-preview-link-notice');
+            if (!notice) {
+                notice = document.createElement('div');
+                notice.id = 'lw-preview-link-notice';
+                notice.setAttribute('role', 'status');
+                notice.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:2147483647;max-width:calc(100% - 24px);padding:10px 14px;border-radius:9px;background:#17212d;color:#fff;font:13px/1.4 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);pointer-events:none;';
+                document.body.appendChild(notice);
+            }
+            notice.textContent = message;
+            notice.hidden = false;
+            clearTimeout(noticeTimer);
+            noticeTimer = setTimeout(function() { notice.hidden = true; }, 3500);
+        }
+
+        document.addEventListener('click', function(event) {
+            var link = event.target.closest && event.target.closest('a[href]');
+            if (!link || event.defaultPrevented) return;
+
+            var href = (link.getAttribute('href') || '').trim();
+            if (href.charAt(0) === '#') {
+                event.preventDefault();
+                var fragment = href.slice(1);
+                if (!fragment) {
+                    window.scrollTo(0, 0);
+                    return;
+                }
+                try { fragment = decodeURIComponent(fragment); } catch (error) {}
+                var target = document.getElementById(fragment) || document.getElementsByName(fragment)[0];
+                if (target) target.scrollIntoView();
+                return;
+            }
+
+            if (/^(https?:)?\/\//i.test(href)) {
+                event.preventDefault();
+                window.open(href, '_blank', 'noopener,noreferrer');
+                return;
+            }
+
+            if (/^(mailto:|tel:)/i.test(href)) return;
+
+            event.preventDefault();
+            showNotice('This page cannot be opened in the preview.');
+        }, true);
+    })();</script>
+                
+
+
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#17152f">
+<title>Waji OS</title>
+<style>
+:root {
+  --accent:#7865ff;
+  --glass:rgba(255,255,255,.13);
+  --text:#fff;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; min-height:100vh; overflow:hidden;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  color:var(--text);
+  background:linear-gradient(135deg,#071a52,#6654d9,#e78bda);
+  background-size:200% 200%;
+  animation:wallpaper 16s ease infinite;
+}
+@keyframes wallpaper {
+  50% { background-position:100% 100%; }
+}
+button,input { font:inherit; }
+button { cursor:pointer; }
+.glass {
+  background:var(--glass);
+  border:1px solid #ffffff38;
+  box-shadow:0 20px 70px #05082340;
+  backdrop-filter:blur(28px) saturate(150%);
+  -webkit-backdrop-filter:blur(28px) saturate(150%);
+}
+.screen {
+  min-height:100vh; display:grid; place-items:center;
+  padding:20px;
+}
+.card {
+  width:min(410px,100%); padding:30px;
+  border-radius:30px; text-align:center;
+  animation:appear .4s ease;
+}
+@keyframes appear {
+  from { opacity:0; transform:translateY(12px) scale(.98); }
+  to { opacity:1; transform:translateY(0) scale(1); }
+}
+.logo {
+  width:65px;height:65px;border-radius:22px;
+  margin:0 auto 14px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#a6e6ff,#7865ff,#ed9aff);
+  font-size:32px;font-weight:900;
+  box-shadow:0 8px 35px #8b78ff70;
+}
+h1 { font-size:36px;letter-spacing:-1.5px;margin:8px 0; }
+p { color:#ffffffb8; }
+.clock { font-size:48px;font-weight:300;letter-spacing:-2px; }
+.field { text-align:left;margin:14px 0; }
+.field label { display:block;font-size:12px;margin-bottom:7px;color:#ffffffcc; }
+.field input {
+  width:100%;padding:13px 14px;border-radius:14px;
+  border:1px solid #ffffff40;background:#ffffff17;color:white;
+  outline:none;
+}
+.field input:focus { border-color:#c5bbff; }
+input::placeholder { color:#ffffff91; }
+.btn {
+  width:100%;padding:13px;border:0;border-radius:14px;
+  background:var(--accent);color:white;font-weight:700;
+  margin-top:10px;transition:transform .2s,filter .2s;
+}
+.btn:hover { filter:brightness(1.13);transform:translateY(-2px); }
+.secondary { background:#ffffff20;border:1px solid #ffffff30; }
+.small { font-size:12px; }
+a,.link { color:#fff;cursor:pointer;text-decoration:underline; }
+.notice { min-height:20px;color:#ffe0a6;font-size:13px; }
+.check { display:flex;gap:9px;align-items:center;text-align:left;font-size:13px; }
+.hidden { display:none!important; }
+#desktop { min-height:100vh;padding:25px; }
+.topbar {
+  position:fixed;top:10px;left:10px;right:10px;
+  height:44px;border-radius:16px;padding:0 16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.welcome { padding-top:100px;text-align:center; }
+.apps { display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:35px; }
+.app {
+  width:100px;height:100px;border-radius:23px;
+  display:grid;place-items:center;align-content:center;gap:8px;
+  background:#ffffff1a;border:1px solid #ffffff30;color:white;
+  transition:transform .2s;
+}
+.app:hover { transform:translateY(-7px) scale(1.04); }
+.app span { font-size:32px; }
+.dock {
+  position:fixed;bottom:15px;left:50%;transform:translateX(-50%);
+  display:flex;gap:9px;padding:10px;border-radius:23px;
+  max-width:95vw;overflow:auto;
+}
+.dock button {
+  width:46px;height:46px;border-radius:15px;border:0;
+  background:#ffffff32;font-size:23px;
+}
+#toast {
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+  padding:12px 18px;border-radius:15px;
+}
+body.light { --text:#1b2040;--glass:rgba(255,255,255,.66); }
+body.light p,body.light .field label { color:#333b60; }
+body.light .field input { color:#172044;background:#ffffff80;border-color:#ffffffa0; }
+body.light input::placeholder { color:#626989; }
+body.light .secondary { color:#172044; }
+@media(max-width:500px) {
+  .card { padding:23px; }
+  h1 { font-size:31px; }
+  .clock { font-size:40px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after { animation:none!important;transition:none!important; }
+}
+</style>
+
+
+<section id="welcome" class="screen hidden">
+  <div class="card glass">
+    <div class="logo">W</div>
+    <h1>Waji</h1>
+    <p>Your world. Reimagined.</p>
+    <button class="btn" onclick="showAuth('signup')">Create account</button>
+    <button class="btn secondary" onclick="showAuth('login')">Sign in</button>
+    <p class="small">A glossy desktop experience for your browser.</p>
+  </div>
+</section>
+
+<section id="auth" class="screen hidden">
+  <div class="card glass">
+    <div class="logo">W</div>
+    <h1 id="authTitle">Create account</h1>
+    <p id="authSubtitle">Create your local Waji profile.</p>
+    <form id="authForm">
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" required="" minlength="3" maxlength="24" autocomplete="username" placeholder="Your username">
+      </div>
+      <div class="field" id="emailField">
+        <label for="email">Email (optional)</label>
+        <input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" required="" minlength="6" autocomplete="new-password" placeholder="Your password">
+      </div>
+      <div id="pinField" class="field">
+        <label for="pin">Create a 4–8 digit PIN</label>
+        <input id="pin" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" placeholder="PIN">
+      </div>
+      <label id="rememberLabel" class="check">
+        <input id="remember" type="checkbox" checked="">
+        Remember this account on this device
+      </label>
+      <p id="message" class="notice"></p>
+      <button class="btn" id="submitButton">Create account</button>
+    </form>
+    <p class="small"><span class="link" onclick="showAuth('login')">Sign in</span>
+      · <span class="link" onclick="showAuth('signup')">Create account</span>
+      · <span class="link" onclick="showWelcome()">Back</span></p>
+    <p class="small">Prototype only. Don't use a real or reused password.</p>
+  </div>
+</section>
+
+<section id="lockscreen" class="screen">
+  <div class="card glass">
+    <div class="clock" id="clock">11:18 AM</div>
+    <p id="date">Friday, October 23</p>
+    <div class="logo">W</div>
+    <h1 id="lockName">Waji</h1>
+    <p>Sign in to your Waji desktop</p>
+    <div class="field">
+      <label for="loginPin">PIN</label>
+      <input id="loginPin" inputmode="numeric" maxlength="8" placeholder="Enter your PIN">
+    </div>
+    <button class="btn" onclick="unlockWithPin()">Unlock with PIN</button>
+    <p class="link small" onclick="showPasswordLogin()">Use password instead</p>
+    <p id="lockMessage" class="notice"></p>
+    <button class="btn secondary" onclick="logout()">Sign out</button>
+  </div>
+</section>
+
+<section id="desktop" class="hidden">
+  <header class="topbar glass">
+    <b>◈ Waji</b>
+    <div>
+      <button class="btn secondary" style="width:auto;margin:0;padding:7px 10px" onclick="toggleTheme()">☀ / ☾</button>
+      <button class="btn secondary" style="width:auto;margin:0;padding:7px 10px" onclick="lockDesktop()">Lock</button>
+    </div>
+  </header>
+  <div class="welcome">
+    <h1 id="desktopGreeting">Welcome, Waji</h1>
+    <p>Your desktop. Your rules.</p>
+    <div class="apps">
+      <button class="app" onclick="openApp('browser')"><span>🌐</span>Browser</button>
+      <button class="app" onclick="openApp('notes')"><span>📝</span>Notes</button>
+      <button class="app" onclick="openApp('calculator')"><span>🧮</span>Calculator</button>
+      <button class="app" onclick="openApp('store')"><span>🛍️</span>Waji Store</button>
+      <button class="app" onclick="openApp('settings')"><span>⚙️</span>Settings</button>
+    </div>
+    <div id="appPanel" class="card glass" style="margin:35px auto;max-width:600px;text-align:left">
+      <h2 id="appTitle">Waji Notes</h2>
+      <div id="appContent">
+      <div class="field"><label>Your notes</label>
+      <textarea id="noteText" rows="7" style="width:100%;border-radius:12px;padding:12px"></textarea></div>
+      <button class="btn" id="saveNote">Save notes</button></div>
+      <button class="btn secondary" onclick="closeApp()">Close app</button>
+    </div>
+  </div>
+  <nav class="dock glass">
+    <button onclick="openApp('browser')" title="Browser">🌐</button>
+    <button onclick="openApp('notes')" title="Notes">📝</button>
+    <button onclick="openApp('calculator')" title="Calculator">🧮</button>
+    <button onclick="openApp('store')" title="Waji Store">🛍️</button>
+    <button onclick="openApp('settings')" title="Settings">⚙️</button>
+  </nav>
+</section>
+<div id="toast" class="glass hidden">Notes saved on this device</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let mode = "signup";
+let currentUser = null;
+let failedAttempts = 0;
+let lockUntil = 0;
+const PROFILE = "waji_profile_v1";
+const PREFS = "waji_prefs_v1";
+const NOTES = "waji_notes_v1";
+const INSTALLED = "waji_installed_v1";
+
+function showOnly(id) {
+  ["welcome","auth","lockscreen","desktop"].forEach(x =>
+    $(x).classList.toggle("hidden", x !== id));
+}
+function showWelcome() { showOnly("welcome"); }
+function showAuth(nextMode) {
+  mode = nextMode;
+  $("authTitle").textContent = mode === "signup" ? "Create account" : "Sign in";
+  $("authSubtitle").textContent = mode === "signup"
+    ? "Create your local Waji profile." : "Sign in to this device.";
+  $("submitButton").textContent = mode === "signup" ? "Create account" : "Sign in";
+  $("pinField").classList.toggle("hidden", mode !== "signup");
+  $("emailField").classList.toggle("hidden", mode !== "signup");
+  $("message").textContent = "";
+  $("password").autocomplete = mode === "signup" ? "new-password" : "current-password";
+  showOnly("auth");
+}
+async function digest(value) {
+  const bytes = new TextEncoder().encode(value);
+  const result = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(result), b => b.toString(16).padStart(2,"0")).join("");
+}
+function readProfile() {
+  try { return JSON.parse(localStorage.getItem(PROFILE) || "null"); }
+  catch { return null; }
+}
+function saveProfile(p) {
+  localStorage.setItem(PROFILE, JSON.stringify(p));
+}
+$("authForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const username = $("username").value.trim();
+  const password = $("password").value;
+  const msg = $("message");
+  msg.textContent = "";
+  try {
+    if (mode === "signup") {
+      if (readProfile()) {
+        msg.textContent = "A demo account already exists on this browser. Sign in instead.";
+        return;
+      }
+      const pin = $("pin").value;
+      if (!/^\d{4,8}$/.test(pin)) {
+        msg.textContent = "Your PIN must contain 4–8 digits.";
+        return;
+      }
+      if (password.length < 6 || username.length < 3) {
+        msg.textContent = "Choose a username and password that meet the requirements.";
+        return;
+      }
+      const profile = {
+        username,
+        email: $("email").value.trim(),
+        passwordHash: await digest(password),
+        pinHash: await digest(pin),
+        remember: $("remember").checked
+      };
+      saveProfile(profile);
+      currentUser = profile;
+      if (profile.remember) localStorage.setItem("waji_remember_v1","yes");
+      enterDesktop();
+    } else {
+      const p = readProfile();
+      if (!p || username.toLowerCase() !== p.username.toLowerCase()
+          || await digest(password) !== p.passwordHash) {
+        msg.textContent = "Incorrect account details on this device.";
+        return;
+      }
+      currentUser = p;
+      if ($("remember").checked) localStorage.setItem("waji_remember_v1","yes");
+      else localStorage.removeItem("waji_remember_v1");
+      enterDesktop();
+    }
+  } catch {
+    msg.textContent = "Storage unavailable. Try opening Waji in a regular Chrome tab.";
+  }
+});
+function enterDesktop() {
+  showOnly("desktop");
+  $("desktopGreeting").textContent = "Welcome, " + currentUser.username;
+  applyPreferences();
+}
+function unlockWithPin() {
+  if (Date.now() < lockUntil) {
+    $("lockMessage").textContent = "Too many attempts. Please wait a little.";
+    return;
+  }
+  const p = readProfile();
+  if (!p) { showAuth("login"); return; }
+  digest($("loginPin").value).then(hash => {
+    if (hash === p.pinHash) {
+      failedAttempts = 0;
+      currentUser = p;
+      $("loginPin").value = "";
+      $("lockMessage").textContent = "";
+      enterDesktop();
+    } else {
+      failedAttempts++;
+      $("lockMessage").textContent = "Incorrect PIN.";
+      if (failedAttempts >= 5) {
+        lockUntil = Date.now() + 30000;
+        failedAttempts = 0;
+        $("lockMessage").textContent = "Too many attempts. Wait 30 seconds.";
+      }
+    }
+  });
+}
+function showPasswordLogin() {
+  const p = readProfile();
+  showAuth("login");
+  if (p) $("username").value = p.username;
+}
+function lockDesktop() {
+  if (!currentUser) return showWelcome();
+  $("lockName").textContent = currentUser.username;
+  $("loginPin").value = "";
+  $("lockMessage").textContent = "";
+  showOnly("lockscreen");
+}
+function logout() {
+  currentUser = null;
+  localStorage.removeItem("waji_remember_v1");
+  showWelcome();
+}
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  savePrefs();
+}
+function savePrefs() {
+  localStorage.setItem(PREFS, JSON.stringify({
+    theme: document.body.classList.contains("light") ? "light" : "dark"
+  }));
+}
+function applyPreferences() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PREFS) || "{}");
+    document.body.classList.toggle("light", p.theme === "light");
+  } catch {}
+}
+function toast(text) {
+  $("toast").textContent = text;
+  $("toast").classList.remove("hidden");
+  setTimeout(() => $("toast").classList.add("hidden"), 2200);
+}
+function openApp(app) {
+  $("appPanel").classList.remove("hidden");
+  const content = $("appContent");
+  $("appTitle").textContent = {
+    browser:"Waji Browser", notes:"Waji Notes", calculator:"Calculator",
+    store:"Waji Store", settings:"Settings"
+  }[app] || "Waji App";
+  if (app === "browser") {
+    content.innerHTML = `
+      <form id="searchForm" class="field">
+        <label>Search or enter a website</label>
+        <input id="searchText" placeholder="example.com or a search">
+        <button class="btn">Search / Open in new tab</button>
+      </form>
+      <p class="small">Some sites block embedded previews. This opens pages in a browser tab.</p>`;
+    $("searchForm").onsubmit = e => {
+      e.preventDefault();
+      let q = $("searchText").value.trim();
+      if (!q) return;
+      if (!/^https?:\/\//i.test(q)) {
+        q = /\s/.test(q)
+          ? "https://www.google.com/search?q=" + encodeURIComponent(q)
+          : "https://" + q;
+      }
+      window.open(q, "_blank", "noopener,noreferrer");
+    };
+  } else if (app === "notes") {
+    content.innerHTML = `
+      <div class="field"><label>Your notes</label>
+      <textarea id="noteText" rows="7" style="width:100%;border-radius:12px;padding:12px"></textarea></div>
+      <button class="btn" id="saveNote">Save notes</button>`;
+    $("noteText").value = localStorage.getItem(NOTES) || "";
+    $("saveNote").onclick = () => {
+      localStorage.setItem(NOTES, $("noteText").value);
+      toast("Notes saved on this device");
+    };
+  } else if (app === "calculator") {
+    content.innerHTML = `
+      <div class="field"><label>Calculator</label>
+      <input id="calcInput" placeholder="Example: (12+8)*3">
+      <button class="btn" id="calcGo">Calculate</button>
+      <p id="calcResult"></p></div>`;
+    $("calcGo").onclick = () => {
+      const expr = $("calcInput").value.trim();
+      if (!/^[0-9+\-*/(). %]+$/.test(expr)) {
+        $("calcResult").textContent = "Only numbers and basic maths operators are allowed.";
+        return;
+      }
+      try {
+        const result = Function('"use strict";return (' + expr + ')')();
+        $("calcResult").textContent = Number.isFinite(result) ? result : "Invalid result";
+      } catch { $("calcResult").textContent = "Invalid calculation"; }
+    };
+  } else if (app === "store") {
+    const catalog = [
+      ["🎨","Waji Paint"],["📅","Calendar"],["⏱️","Focus Timer"],
+      ["🎮","Mini Games"],["📚","Reader"]
+    ];
+    let installed = JSON.parse(localStorage.getItem(INSTALLED) || "[]");
+    content.innerHTML = "<p>Demo apps</p>" + catalog.map((item,i) =>
+      `<div class="row" style="display:flex;justify-content:space-between;gap:12px;margin:10px 0">
+       <span>${item[0]} ${item[1]}</span>
+       <button class="btn secondary" style="width:auto;margin:0" data-install="${i}">
+       ${installed.includes(i) ? "Added ✓" : "Add"}</button></div>`).join("");
+    content.querySelectorAll("[data-install]").forEach(b => b.onclick = () => {
+      if (!installed.includes(+b.dataset.install)) installed.push(+b.dataset.install);
+      localStorage.setItem(INSTALLED,JSON.stringify(installed));
+      openApp("store");
+      toast("Added to your Waji library");
+    });
+  } else if (app === "settings") {
+    content.innerHTML = `
+      <button class="btn secondary" id="themeBtn">Toggle light / dark mode</button>
+      <button class="btn secondary" id="lockBtn">Lock desktop</button>
+      <p class="small">Your demo account is stored locally in this browser.</p>`;
+    $("themeBtn").onclick = toggleTheme;
+    $("lockBtn").onclick = lockDesktop;
+  }
+}
+function closeApp() { $("appPanel").classList.add("hidden"); }
+function updateClock() {
+  const d = new Date();
+  $("clock").textContent = d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+  $("date").textContent = d.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"});
+}
+setInterval(updateClock,1000);
+updateClock();
+
+// Remember the username only. Require the PIN/password again after reopening.
+try {
+  const p = readProfile();
+  if (p && localStorage.getItem("waji_remember_v1") === "yes") {
+    $("username").value = p.username;
+  }
+} catch {}
+</script>
+
+
+
+                <script></script>
+            
+        
+    </body>
